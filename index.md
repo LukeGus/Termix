@@ -5,21 +5,21 @@ layout: home
 hero:
   name: "Termix"
   text: "Doccumentation"
-  tagline: My great project tagline
+  tagline: Clientless web-based SSH terminal emulator that stores and manages your connection details
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Docs
+      link: /docs
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: GitHub
+      link: 'https://github.com/LukeGus/Termix'
 
 features:
-  - title: Feature A
+  - title: SSH
     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
+  - title: Split Screen w/ Tab System
     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
+  - title: User Management
     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
 ---
 
