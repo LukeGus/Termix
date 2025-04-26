@@ -4,22 +4,37 @@ layout: home
 
 hero:
   name: "Termix"
-  text: "Doccumentation"
+  text: "Web-based SSH Client"
   tagline: Clientless web-based SSH terminal emulator that stores and manages your connection details
+  image:
+    src: /logo512.png
+    alt: Termix
   actions:
     - theme: brand
-      text: Docs
+      text: Get Started
       link: /docs
     - theme: alt
       text: GitHub
       link: 'https://github.com/LukeGus/Termix'
 
 features:
-  - title: SSH
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Split Screen w/ Tab System
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: User Management
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - icon: 📡
+    title: SSH
+    details: Connect to any SSH server directly from your browser with no client installation needed. Supports key-based and password authentication.
+  - icon: 🗂️
+    title: Split Screen & Tab System
+    details: View up to 4 terminals simultaneously with the split screen feature. Organize multiple connections with an intuitive tab system.
+  - icon: 🔐
+    title: User Authentication
+    details: Secure multi-user support with authentication system. Each user gets their own isolated environment and saved connections.
+  - icon: 💾
+    title: Save Hosts
+    details: Store and manage your connection details securely. Quickly connect to your favorite servers with just a click.
+  - icon: 🎨
+    title: Terminal Themes
+    details: Customize your terminal experience with various color schemes and themes to reduce eye strain and match your preference.
+  - icon: 🐳
+    title: Easy Deployment
+    details: Quick setup using Docker or Docker Compose. Get up and running in minutes with minimal configuration required.
 ---
 
