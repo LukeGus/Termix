@@ -7,5 +7,8 @@
   "dependencies": {
     "node": "^22.15.0",
     "yarn": "^1.22.22"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3"
   }
 }
