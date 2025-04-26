@@ -7,7 +7,7 @@ hero:
   text: "Web-based SSH Client"
   tagline: Clientless web-based SSH terminal emulator that stores and manages your connection details
   image:
-    src: /logo512.png
+    src: /logo512.webp
     alt: Termix
   actions:
     - theme: brand
