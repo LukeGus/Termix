@@ -7,6 +7,7 @@ export default defineConfig({
   lastUpdated: true,
   cleanUrls: true,
   metaChunk: true,
+  base: '/Termix/',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo: "/favicon.ico",
