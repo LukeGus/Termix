@@ -5,6 +5,7 @@
     "docs:preview": "vitepress preview"
   },
   "dependencies": {
-    "node": "^22.15.0"
+    "node": "^22.15.0",
+    "yarn": "^1.22.22"
   }
 }
