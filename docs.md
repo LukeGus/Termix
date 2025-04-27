@@ -25,7 +25,7 @@ docker run -d \
 ```
 
 ::: warning
-Make sure to replace the SALT value with your own secure random string. You can generate one at [LastPass Password Generator](https://www.lastpass.com/features/password-generator).
+Make sure to replace the SALT value with your own secure random string, using all characters and a maximum length of 32 characters. You can generate one at LastPass Password Generator.
 :::
 
 ### Docker Compose Installation
