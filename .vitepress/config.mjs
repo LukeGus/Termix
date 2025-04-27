@@ -8,10 +8,9 @@ export default defineConfig({
   cleanUrls: true,
   metaChunk: true,
   base: '/',
+  head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    logo: "/favicon.ico",
-
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Docs', link: '/docs' }
