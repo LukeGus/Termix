@@ -164,3 +164,4 @@ typings/
 /docker/docker-compose.yml
 /data/termix.db
 /data/settings.json
+.docs/
