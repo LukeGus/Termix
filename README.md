@@ -1,9 +1,9 @@
 > [!WARNING]
 > **Project Migration in Progress**
 >
-> This project is currently undergoing a full migration to **TypeScript**.  
+> This project is currently undergoing a full migration to **TypeScript** / **Shadcn**.  
 > There will be no updates during this process (may take weeks to months).  
-> Once completed, expect many new features and improvements! (Migrates many of my other software into one tool)
+> Once completed, expect many new features and improvements! (Migrates many of my other projects into one glorified tool)
 
 
 # Repo Stats
