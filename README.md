@@ -1,3 +1,11 @@
+> [!WARNING]
+> **Project Migration in Progress**
+>
+> This project is currently undergoing a full migration to **TypeScript**.  
+> There will be no updates during this process (may take weeks to months).  
+> Once completed, expect many new features and improvements! (Migrates many of my other software into one tool)
+
+
 # Repo Stats
 ![GitHub Repo stars](https://img.shields.io/github/stars/LukeGus/Termix?style=flat&label=Stars)
 ![GitHub forks](https://img.shields.io/github/forks/LukeGus/Termix?style=flat&label=Forks)
