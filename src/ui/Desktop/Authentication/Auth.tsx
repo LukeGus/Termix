@@ -25,7 +25,7 @@ import {
   isElectron,
   logoutUser,
 } from "../../main-axios.ts";
-import { ServerConfig as ServerConfigComponent } from "@/ui/Desktop/Electron Only/ServerConfig.tsx";
+import { ElectronServerConfig as ServerConfigComponent } from "@/ui/Desktop/Authentication/ElectronServerConfig.tsx";
 
 interface HomepageAuthProps extends React.ComponentProps<"div"> {
   setLoggedIn: (loggedIn: boolean) => void;
@@ -43,7 +43,7 @@ interface HomepageAuthProps extends React.ComponentProps<"div"> {
   }) => void;
 }
 
-export function HomepageAuth({
+export function Auth({
   className,
   setLoggedIn,
   setIsAdmin,
@@ -687,6 +687,7 @@ export function HomepageAuth({
               disabled={totpLoading}
               className="text-center text-2xl tracking-widest font-mono"
               autoComplete="one-time-code"
+              autoFocus
             />
             <p className="text-xs text-muted-foreground text-center">
               {t("auth.backupCode")}
@@ -881,6 +882,7 @@ export function HomepageAuth({
                             }
                             disabled={resetLoading}
                             placeholder="000000"
+                            autoFocus
                           />
                         </div>
                         <Button

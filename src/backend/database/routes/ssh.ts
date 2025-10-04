@@ -281,7 +281,14 @@ router.post(
       sshDataObj.keyPassword = keyPassword || null;
       sshDataObj.keyType = keyType;
       sshDataObj.password = null;
+    } else if (effectiveAuthType === "none") {
+      // No authentication credentials - set all to null
+      sshDataObj.password = null;
+      sshDataObj.key = null;
+      sshDataObj.keyPassword = null;
+      sshDataObj.keyType = null;
     } else {
+      // credential type or fallback - set all to null except credentialId
       sshDataObj.password = null;
       sshDataObj.key = null;
       sshDataObj.keyPassword = null;
@@ -471,7 +478,14 @@ router.put(
         sshDataObj.keyType = keyType;
       }
       sshDataObj.password = null;
+    } else if (effectiveAuthType === "none") {
+      // No authentication credentials - set all to null
+      sshDataObj.password = null;
+      sshDataObj.key = null;
+      sshDataObj.keyPassword = null;
+      sshDataObj.keyType = null;
     } else {
+      // credential type or fallback - set all to null except credentialId
       sshDataObj.password = null;
       sshDataObj.key = null;
       sshDataObj.keyPassword = null;
@@ -1313,6 +1327,108 @@ router.put(
   },
 );
 
+// DELETE /ssh/folders/:folderName - Delete folder and all its hosts
+router.delete(
+  "/folders/:folderName",
+  authenticateJWT,
+  async (req: Request, res: Response) => {
+    const userId = (req as any).userId;
+    const { folderName } = req.params;
+
+    if (!isNonEmptyString(userId) || !folderName) {
+      sshLogger.warn("Invalid data for folder deletion");
+      return res
+        .status(400)
+        .json({ error: "Folder name is required" });
+    }
+
+    try {
+      // Get all hosts in this folder to delete related data
+      const hostsInFolder = await db
+        .select()
+        .from(sshData)
+        .where(and(eq(sshData.userId, userId), eq(sshData.folder, folderName)));
+
+      if (hostsInFolder.length === 0) {
+        return res.json({
+          message: "Folder is empty or does not exist",
+          deletedHosts: 0,
+        });
+      }
+
+      const hostIds = hostsInFolder.map((host) => host.id);
+
+      // Delete related file manager data for all hosts in folder
+      for (const hostId of hostIds) {
+        await db
+          .delete(fileManagerRecent)
+          .where(
+            and(
+              eq(fileManagerRecent.userId, userId),
+              eq(fileManagerRecent.hostId, hostId),
+            ),
+          );
+
+        await db
+          .delete(fileManagerPinned)
+          .where(
+            and(
+              eq(fileManagerPinned.userId, userId),
+              eq(fileManagerPinned.hostId, hostId),
+            ),
+          );
+
+        await db
+          .delete(fileManagerShortcuts)
+          .where(
+            and(
+              eq(fileManagerShortcuts.userId, userId),
+              eq(fileManagerShortcuts.hostId, hostId),
+            ),
+          );
+
+        await db
+          .delete(sshConnections)
+          .where(
+            and(
+              eq(sshConnections.userId, userId),
+              eq(sshConnections.hostId, hostId),
+            ),
+          );
+      }
+
+      // Delete all hosts in the folder
+      const deletedHosts = await SimpleDBOps.softDelete(
+        sshData,
+        "ssh_data",
+        and(eq(sshData.userId, userId), eq(sshData.folder, folderName)),
+        userId,
+      );
+
+      DatabaseSaveTrigger.triggerSave("folder_delete");
+
+      sshLogger.success("Folder and hosts deleted successfully", {
+        operation: "folder_delete",
+        userId,
+        folderName,
+        deletedCount: deletedHosts.length,
+      });
+
+      res.json({
+        message: "Folder and all hosts deleted successfully",
+        deletedHosts: deletedHosts.length,
+      });
+    } catch (err) {
+      sshLogger.error("Failed to delete folder", err, {
+        operation: "folder_delete",
+        userId,
+        folderName,
+      });
+      res.status(500).json({ error: "Failed to delete folder" });
+    }
+  },
+);
+
 // Route: Bulk import SSH hosts (requires JWT)
 // POST /ssh/bulk-import
 router.post(
@@ -1356,10 +1472,12 @@ router.post(
           continue;
         }
 
-        if (!["password", "key", "credential"].includes(hostData.authType)) {
+        if (
+          !["password", "key", "credential", "none"].includes(hostData.authType)
+        ) {
           results.failed++;
           results.errors.push(
-            `Host ${i + 1}: Invalid authType. Must be 'password', 'key', or 'credential'`,
+            `Host ${i + 1}: Invalid authType. Must be 'password', 'key', 'credential', or 'none'`,
           );
           continue;
         }
@@ -1390,6 +1508,8 @@ router.post(
           );
           continue;
         }
+
+        // "none" authType requires no validation - no credentials needed
 
         const sshDataObj: any = {
           userId: userId,
