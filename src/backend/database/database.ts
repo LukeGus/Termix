@@ -6,6 +6,8 @@ import userRoutes from "./routes/users.js";
 import sshRoutes from "./routes/ssh.js";
 import alertRoutes from "./routes/alerts.js";
 import credentialsRoutes from "./routes/credentials.js";
+import snippetsRoutes from "./routes/snippets.js";
+import homepageRoutes from "./routes/homepage.js";
 import cors from "cors";
 import fetch from "node-fetch";
 import fs from "fs";
@@ -30,6 +32,7 @@ import {
   dismissedAlerts,
   sshCredentialUsage,
   settings,
+  sshConnections,
 } from "./db/schema.js";
 import { getDb } from "./db/index.js";
 import Database from "better-sqlite3";
@@ -465,31 +468,39 @@ app.post("/database/export", authenticateJWT, async (req, res) => {
     const userId = (req as any).userId;
     const { password } = req.body;
 
-    if (!password) {
-      return res.status(400).json({
-        error: "Password required for export",
-        code: "PASSWORD_REQUIRED",
-      });
+    // Fetch user to check authentication type
+    const user = await getDb().select().from(users).where(eq(users.id, userId));
+    if (!user || user.length === 0) {
+      throw new Error(`User not found: ${userId}`);
     }
 
-    const unlocked = await authManager.authenticateUser(userId, password);
-    if (!unlocked) {
-      return res.status(401).json({ error: "Invalid password" });
+    const isOIDCUser = user[0].is_oidc;
+
+    // OIDC users: Already authenticated via JWT, no password verification needed
+    // Local users: Require password verification for sensitive operations
+    if (!isOIDCUser) {
+      if (!password) {
+        return res.status(400).json({
+          error: "Password required for export",
+          code: "PASSWORD_REQUIRED",
+        });
+      }
+
+      const unlocked = await authManager.authenticateUser(userId, password);
+      if (!unlocked) {
+        return res.status(401).json({ error: "Invalid password" });
+      }
     }
 
     apiLogger.info("Exporting user data as SQLite", {
       operation: "user_data_sqlite_export_api",
       userId,
+      authType: isOIDCUser ? "oidc" : "local",
     });
 
     const userDataKey = DataCrypto.getUserDataKey(userId);
     if (!userDataKey) {
       throw new Error("User data not unlocked");
-    }
-
-    const user = await getDb().select().from(users).where(eq(users.id, userId));
-    if (!user || user.length === 0) {
-      throw new Error(`User not found: ${userId}`);
     }
 
     const tempDir =
@@ -638,6 +649,26 @@ app.post("/database/export", authenticateJWT, async (req, res) => {
           host_id INTEGER NOT NULL,
           user_id TEXT NOT NULL,
           used_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE snippets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          content TEXT NOT NULL,
+          description TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE ssh_connections (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id TEXT NOT NULL,
+          host_id INTEGER NOT NULL,
+          connected_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          disconnected_at TEXT,
+          duration INTEGER,
+          connection_type TEXT NOT NULL DEFAULT 'terminal'
         );
       `);
 
@@ -860,6 +891,14 @@ app.post("/database/export", authenticateJWT, async (req, res) => {
     res.setHeader("Content-Type", "application/x-sqlite3");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
+    // Add security warning for OIDC users
+    if (isOIDCUser) {
+      res.setHeader(
+        "X-Security-Warning",
+        "OIDC user: Anyone with access to your OIDC account can export your data",
+      );
+    }
+
     const fileStream = fs.createReadStream(tempPath);
 
     fileStream.on("error", (streamError) => {
@@ -919,21 +958,37 @@ app.post(
       const userId = (req as any).userId;
       const { password } = req.body;
 
-      if (!password) {
-        return res.status(400).json({
-          error: "Password required for import",
-          code: "PASSWORD_REQUIRED",
-        });
+      // Fetch user to check authentication type
+      const user = await getDb()
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+      if (!user || user.length === 0) {
+        throw new Error(`User not found: ${userId}`);
       }
 
-      const unlocked = await authManager.authenticateUser(userId, password);
-      if (!unlocked) {
-        return res.status(401).json({ error: "Invalid password" });
+      const isOIDCUser = user[0].is_oidc;
+
+      // OIDC users: Already authenticated via JWT, no password verification needed
+      // Local users: Require password verification for sensitive operations
+      if (!isOIDCUser) {
+        if (!password) {
+          return res.status(400).json({
+            error: "Password required for import",
+            code: "PASSWORD_REQUIRED",
+          });
+        }
+
+        const unlocked = await authManager.authenticateUser(userId, password);
+        if (!unlocked) {
+          return res.status(401).json({ error: "Invalid password" });
+        }
       }
 
       apiLogger.info("Importing SQLite data", {
         operation: "sqlite_import_api",
         userId,
+        authType: isOIDCUser ? "oidc" : "local",
         filename: req.file.originalname,
         fileSize: req.file.size,
         mimetype: req.file.mimetype,
@@ -1301,6 +1356,11 @@ app.post(
           ? "Incremental import completed successfully"
           : "Import failed",
         summary: result.summary,
+        // Security warning for OIDC users
+        ...(isOIDCUser && {
+          securityWarning:
+            "OIDC user: Anyone with access to your OIDC account can import data to your account",
+        }),
       });
 
       if (result.success) {
@@ -1411,6 +1471,8 @@ app.use("/users", userRoutes);
 app.use("/ssh", sshRoutes);
 app.use("/alerts", alertRoutes);
 app.use("/credentials", credentialsRoutes);
+app.use("/snippets", snippetsRoutes);
+app.use("/homepage", homepageRoutes);
 
 app.use(
   (
