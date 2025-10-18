@@ -235,48 +235,65 @@ app.post("/ssh/file_manager/ssh/connect", async (req, res) => {
     );
   }
 
-  const config: any = {
-    host: ip,
-    port: port || 22,
-    username,
-    readyTimeout: 60000,
-    keepaliveInterval: 30000,
-    keepaliveCountMax: 3,
-    algorithms: {
-      kex: [
-        "diffie-hellman-group14-sha256",
-        "diffie-hellman-group14-sha1",
-        "diffie-hellman-group1-sha1",
-        "diffie-hellman-group-exchange-sha256",
-        "diffie-hellman-group-exchange-sha1",
-        "ecdh-sha2-nistp256",
-        "ecdh-sha2-nistp384",
-        "ecdh-sha2-nistp521",
-      ],
-      cipher: [
-        "aes128-ctr",
-        "aes192-ctr",
-        "aes256-ctr",
-        "aes128-gcm@openssh.com",
-        "aes256-gcm@openssh.com",
-        "aes128-cbc",
-        "aes192-cbc",
-        "aes256-cbc",
-        "3des-cbc",
-      ],
-      hmac: [
-        "hmac-sha2-256-etm@openssh.com",
-        "hmac-sha2-512-etm@openssh.com",
-        "hmac-sha2-256",
-        "hmac-sha2-512",
-        "hmac-sha1",
-        "hmac-md5",
-      ],
-      compress: ["none", "zlib@openssh.com", "zlib"],
-    },
-  };
+    const config: any = {
+        host: ip,
+        port: port || 22,
+        username,
+        readyTimeout: 60000,
+        keepaliveInterval: 30000,
+        keepaliveCountMax: 3,
+        algorithms: {
+            kex: [
+                "curve25519-sha256",
+                "curve25519-sha256@libssh.org",
+                "ecdh-sha2-nistp521",
+                "ecdh-sha2-nistp384",
+                "ecdh-sha2-nistp256",
+                "diffie-hellman-group-exchange-sha256",
+                "diffie-hellman-group14-sha256",
+                "diffie-hellman-group14-sha1",
+                "diffie-hellman-group-exchange-sha1",
+                "diffie-hellman-group1-sha1",
+            ],
+            serverHostKey: [
+                "ssh-ed25519",
+                "ssh-ed25519-cert-v01@openssh.com",
+                "ecdsa-sha2-nistp521",
+                "ecdsa-sha2-nistp384",
+                "ecdsa-sha2-nistp256",
+                "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+                "rsa-sha2-512",
+                "rsa-sha2-256",
+                "rsa-sha2-512-cert-v01@openssh.com",
+                "rsa-sha2-256-cert-v01@openssh.com",
+                "ssh-rsa",
+                "ssh-dss",
+            ],
+            cipher: [
+                "chacha20-poly1305@openssh.com",
+                "aes256-gcm@openssh.com",
+                "aes128-gcm@openssh.com",
+                "aes256-ctr",
+                "aes192-ctr",
+                "aes128-ctr",
+                "aes256-cbc",
+                "aes192-cbc",
+                "aes128-cbc",
+                "3des-cbc",
+            ],
+            hmac: [
+                "hmac-sha2-512-etm@openssh.com",
+                "hmac-sha2-256-etm@openssh.com",
+                "hmac-sha2-512",
+                "hmac-sha2-256",
+                "hmac-sha1",
+                "hmac-md5",
+            ],
+            compress: ["none", "zlib@openssh.com", "zlib"],
+        },
+    };
 
-  if (
+    if (
     resolvedCredentials.authType === "password" &&
     resolvedCredentials.password &&
     resolvedCredentials.password.trim()
